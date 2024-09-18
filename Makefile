@@ -190,8 +190,10 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
-	$U/_hello\
-	$U/_world\
+	$U/_sleep\
+	$U/_pingpong\
+	$U/_find\
+	$U/_xargs\
 
 
 
@@ -260,6 +262,7 @@ endif
 
 UEXTRA=
 ifeq ($(LAB),util)
+	UEXTRA += user/findtest.sh
 	UEXTRA += user/xargstest.sh
 endif
 
