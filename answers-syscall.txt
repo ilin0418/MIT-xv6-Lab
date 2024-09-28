@@ -1,0 +1,6 @@
+Q1. usertrap()
+Q2. $2 = 7
+Q3. $3 = 0x8 -> A environment call from user mode. 
+Q4: sepc=0x0000000080002072 stval=0x0000000000000000
+The sepc register corresponds to the variable num. 
+Q5: initcode, pid=1
