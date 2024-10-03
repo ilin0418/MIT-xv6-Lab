@@ -68,6 +68,20 @@ argaddr(int n, uint64 *ip)
   *ip = argraw(n);
 }
 
+// Exact copy of the original argaddr function
+// returns 0 for when it works and -1 if it fail
+int
+argaddr2(int n, uint64 *ip) 
+{
+  *ip = argraw(n);
+  if(*ip < MAXVA)
+  {
+    return 0;
+  }
+  
+  return -1;
+}
+
 // Fetch the nth word-sized system call argument as a null-terminated string.
 // Copies into buf, at most max.
 // Returns string length if OK (including nul), -1 if error.
@@ -102,6 +116,7 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_trace(void);
+extern uint64 sys_sysinfo(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -128,9 +143,10 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_trace]   sys_trace,
+[SYS_sysinfo] sys_sysinfo,
 };
 
-static char *syscall_names[] = {
+static char *syscall_names[] = { //How we're printing out what each syscall means
     [SYS_fork]   "fork",
     [SYS_exit]   "exit",
     [SYS_wait]   "wait",
@@ -166,9 +182,9 @@ syscall(void) {
 
     if (num > 0 && num < NELEM(syscalls) && syscalls[num]) {
         p->trapframe->a0 = syscalls[num](); 
-        if (p->trace_mask & (1 << num)) // check if valid 
+        if (p->trace_mask & (1 << num)) // check validity
         {
-            if (num < NELEM(syscall_names) && syscall_names[num]) //check if the value is in our "dict" and that we have a corresponding string for it.
+            if (num < NELEM(syscall_names) && syscall_names[num]) //check if the value is in our "dictionary" so that we have a corresponding string for it.
             {
                 printf("%d: syscall %s -> %d\n", p->pid, syscall_names[num], p->trapframe->a0);
             } 

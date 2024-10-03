@@ -73,10 +73,33 @@ kalloc(void)
   acquire(&kmem.lock);
   r = kmem.freelist;
   if(r)
+  {
     kmem.freelist = r->next;
+  }
   release(&kmem.lock);
 
   if(r)
-    memset((char*)r, 5, PGSIZE); // fill with junk
-  return (void*)r;
+  {
+    memset((char*)r, 5, PGSIZE);
+  }
+
+  return (void*) r;
+}
+
+uint64
+freemem(void) // returns the amount of free memory avaliable
+{
+  uint64 count = 0;
+  struct run *r;
+  
+  acquire(&kmem.lock);
+  r = kmem.freelist;
+  while(r) 
+  {
+    count += PGSIZE;
+    r = r->next;
+  }
+  release(&kmem.lock);
+  
+  return count;
 }
