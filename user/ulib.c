@@ -152,6 +152,8 @@ memcpy(void *dst, const void *src, uint n)
 }
 
 #ifdef LAB_PGTBL
+
+
 int
 ugetpid(void)
 {

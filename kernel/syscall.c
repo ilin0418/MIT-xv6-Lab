@@ -68,6 +68,19 @@ argaddr(int n, uint64 *ip)
   *ip = argraw(n);
 }
 
+uint64 //same thing as argint but returns the value
+argint2(int n, int *ip)
+{
+  return argraw(n);
+}
+
+uint64 //same thing as argaddr2 but returns the value
+argaddr2(int n, uint64 *ip)
+{
+  return argraw(n);
+}
+
+
 // Fetch the nth word-sized system call argument as a null-terminated string.
 // Copies into buf, at most max.
 // Returns string length if OK (including nul), -1 if error.
@@ -101,6 +114,7 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
+extern uint64 sys_pgaccess(void);
 
 #ifdef LAB_NET
 extern uint64 sys_connect(void);
@@ -133,6 +147,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_pgaccess]   sys_pgaccess,
+
 #ifdef LAB_NET
 [SYS_connect] sys_connect,
 #endif

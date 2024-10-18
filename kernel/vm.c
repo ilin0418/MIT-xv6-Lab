@@ -85,15 +85,15 @@ kvminithart()
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
-  if(va >= MAXVA)
-    panic("walk");
+  if (va >= MAXVA)
+    panic("walk: va out of range");
 
-  for(int level = 2; level > 0; level--) {
+  for (int level = 2; level > 0; level--) {
     pte_t *pte = &pagetable[PX(level, va)];
-    if(*pte & PTE_V) {
+    if (*pte & PTE_V) {
       pagetable = (pagetable_t)PTE2PA(*pte);
     } else {
-      if(!alloc || (pagetable = (pde_t*)kalloc()) == 0)
+      if (!alloc || (pagetable = (pde_t*)kalloc()) == 0)
         return 0;
       memset(pagetable, 0, PGSIZE);
       *pte = PA2PTE(pagetable) | PTE_V;
@@ -291,6 +291,37 @@ freewalk(pagetable_t pagetable)
     }
   }
   kfree((void*)pagetable);
+}
+
+void
+print_pagetable(int index , int depth , uint64 pte , uint64 pa){
+    for(int i = 0; i < depth; ++i) {
+        printf(".. ");
+    }
+    printf("..");
+    printf("%d: pte %p pa %p\n", index, pte, pa);
+}
+void
+freewalk2(pagetable_t pagetable, int depth)
+{
+    // there are 2^9 = 512 PTEs in a page table.
+    for(int i = 0; i < 512; i++){
+        pte_t pte = pagetable[i];
+        if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0){
+            uint64 child = PTE2PA(pte);
+            print_pagetable(i,depth,pte,child);
+            freewalk2((pagetable_t)child, depth+1); //recursively call printContent on to next depth
+        } else if(pte & PTE_V){
+            uint64 child = PTE2PA(pte);
+            print_pagetable(i,depth,pte,child);
+        }
+    }
+}
+void
+vmprint(pagetable_t pagetable)
+{
+    printf("page table %p\n", pagetable);
+    freewalk2(pagetable, 0);
 }
 
 // Free user memory pages,

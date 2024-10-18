@@ -74,7 +74,39 @@ sys_sleep(void)
 int
 sys_pgaccess(void)
 {
-  // lab pgtbl: your code here.
+    uint64 address; // arg 0 the starting virtual address of the first user page to check
+    int n; // the number of pages to check 
+    int bitmask; // user address that's stored into a bitmask
+    int buf = 0; // temporary buffer in the kernel;
+    struct proc* p = myproc(); // the current process
+
+    argaddr(0, &address);
+    argint(1, &n);
+    argint(2, &bitmask);
+
+    if( n > 100 || n < 0) //check if vaid (between 1 and 99 pages)
+    {
+        return -1;
+    }
+
+    pte_t *pte = 0;
+
+    for( int i = 0; i < n; ++i)
+    {
+        int va = address + i * PGSIZE; //virtual space for each space
+        pte = walk(p->pagetable, va, 0); //table entry in virtual address
+        if(*pte & PTE_A) //access bit was set
+        {
+            buf = buf | (1L << i); // we know ith page was accessed
+        }
+        *pte = (*pte) & ~PTE_A; // reset access bit to zero
+    }
+
+    if(copyout(p->pagetable, bitmask, (char*)&buf, sizeof(buf)) < 0) //copy to user space
+    {
+        return -1;
+    }
+
   return 0;
 }
 #endif

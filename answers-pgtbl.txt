@@ -1,0 +1,22 @@
+Question 1:
+.. .. ..0: pte 0x0000000021fda01b pa 0x0000000087f68000
+Contents: This page contains code or read-only data since it has Read and Execute permissions but not Write.
+Permissions: Read, Execute, User
+.. .. ..1: pte 0x0000000021fd9417 pa 0x0000000087f65000
+Contents: This page contains read-write data accessible to user mode.
+Permissions: Read, Write, User
+.. .. ..2: pte 0x0000000021fd9007 pa 0x0000000087f64000
+Contents: This page contains read-write data accessible to user mode based on its permissions.
+Permissions: Read, Write, User
+.. .. ..3: pte 0x0000000021fd8c17 pa 0x0000000087f63000
+Contents: This page contains read-write data accessible to user mode.
+Permissions: Read, Write, User
+.. .. ..509: pte 0x0000000021fdcc13 pa 0x0000000087f73000
+Contents: This page contains read-write data accessible to user mode.
+Permissions: Read, Write, User
+.. .. ..510: pte 0x0000000021fdd007 pa 0x0000000087f74000
+Contents: This page contains read-write data accessible to user mode.
+Permissions: Read, Write, User
+.. .. ..511: pte 0x0000000020001c0b pa 0x0000000080007000
+Contents: This page is likely special as it maps to a much lower physical address. It has Read, Execute, and User permissions, suggesting it contains code accessible in user mode.
+Permissions: Read, Execute, User
