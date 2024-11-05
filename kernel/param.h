@@ -1,5 +1,5 @@
 #ifdef LAB_FS
-#define NPROC        10  // maximum number of processes
+#define NPROC         8  // maximum number of processes
 #else
 #define NPROC        64  // maximum number of processes (speedsup bigfile)
 #endif
