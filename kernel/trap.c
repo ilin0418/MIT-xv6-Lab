@@ -13,7 +13,7 @@ extern char trampoline[], uservec[], userret[];
 
 // in kernelvec.S, calls kerneltrap().
 void kernelvec();
-
+int handle_copy_on_write(pagetable_t pagetable, uint64 va);
 extern int devintr();
 
 void
@@ -37,40 +37,52 @@ void
 usertrap(void)
 {
   int which_dev = 0;
+  struct proc *p = myproc();
 
   if((r_sstatus() & SSTATUS_SPP) != 0)
-    panic("usertrap: not from user mode");
+    panic("usertrap: not from user mode!");
 
   // send interrupts and exceptions to kerneltrap(),
-  // since we're now in the kernel.
   w_stvec((uint64)kernelvec);
 
-  struct proc *p = myproc();
-  
   // save user program counter.
   p->trapframe->epc = r_sepc();
-  
-  if(r_scause() == 8){
-    // system call
 
-    if(killed(p))
-      exit(-1);
+  switch(r_scause()) {
+    case 8: 
+      // system call
+      if(killed(p))
+      {
+        exit(-1);
+      }
 
-    // sepc points to the ecall instruction,
-    // but we want to return to the next instruction.
-    p->trapframe->epc += 4;
+      // sepc points to the ecall instruction,
+      // but we want to return to the next instruction.
+      p->trapframe->epc += 4;
 
-    // an interrupt will change sepc, scause, and sstatus,
-    // so enable only now that we're done with those registers.
-    intr_on();
+      // an interrupt will change sepc, scause, and sstatus, enable only when we're done with those registers.
+      intr_on();
+      syscall();
+      break;
 
-    syscall();
-  } else if((which_dev = devintr()) != 0){
-    // ok
-  } else {
-    printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
-    printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());
-    setkilled(p);
+    case 13:
+    // load access fault
+    case 15:       
+      {
+        uint64 va = r_stval();
+        if((va <= PGROUNDDOWN(p->trapframe->sp) && va >= PGROUNDDOWN(p->trapframe->sp) - PGSIZE) || (handle_copy_on_write(p->pagetable, va) == -1))
+        {
+          p->killed = 1; // set the process as killed
+        }
+      }
+      break;
+
+    default:
+      if((which_dev = devintr()) == 0) 
+      {
+        setkilled(p); // set the process as killed
+      }
+      break;
   }
 
   if(killed(p))
