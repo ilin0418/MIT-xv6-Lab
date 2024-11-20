@@ -25,12 +25,19 @@ barrier_init(void)
 static void 
 barrier()
 {
-  // YOUR CODE HERE
-  //
-  // Block until all threads have called barrier() and
-  // then increment bstate.round.
-  //
-  
+  pthread_mutex_lock(&bstate.barrier_mutex);
+  bstate.nthread += 1;
+  if (bstate.nthread == nthread) // Last thread to reach the barrier
+  {
+    bstate.nthread = 0;
+    bstate.round++;
+    pthread_cond_broadcast(&bstate.barrier_cond);
+  } 
+  else 
+  {
+    while (pthread_cond_wait(&bstate.barrier_cond, &bstate.barrier_mutex) != 0); // Wait for the last thread to reach the barrier
+  }
+  pthread_mutex_unlock(&bstate.barrier_mutex);
 }
 
 static void *

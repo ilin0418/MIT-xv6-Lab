@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "mutex": "c",
+        "__mutex_base": "c",
+        "memory": "c"
+    }
+}

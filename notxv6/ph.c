@@ -13,6 +13,8 @@ struct entry {
   int value;
   struct entry *next;
 };
+pthread_mutex_t table_locks[NBUCKET]; // locks for each bucket
+
 struct entry *table[NBUCKET];
 int keys[NKEYS];
 int nthread = 1;
@@ -21,9 +23,9 @@ int nthread = 1;
 double
 now()
 {
- struct timeval tv;
- gettimeofday(&tv, 0);
- return tv.tv_sec + tv.tv_usec / 1000000.0;
+  struct timeval tv;
+  gettimeofday(&tv, 0);
+  return tv.tv_sec + tv.tv_usec / 1000000.0;
 }
 
 static void 
@@ -43,6 +45,8 @@ void put(int key, int value)
 
   // is the key already present?
   struct entry *e = 0;
+  pthread_mutex_lock(&table_locks[i]);
+
   for (e = table[i]; e != 0; e = e->next) {
     if (e->key == key)
       break;
@@ -54,7 +58,7 @@ void put(int key, int value)
     // the new is new.
     insert(key, value, &table[i], table[i]);
   }
-
+  pthread_mutex_unlock(&table_locks[i]);
 }
 
 static struct entry*
@@ -105,7 +109,6 @@ main(int argc, char *argv[])
   void *value;
   double t1, t0;
 
-
   if (argc < 2) {
     fprintf(stderr, "Usage: %s nthreads\n", argv[0]);
     exit(-1);
@@ -116,6 +119,11 @@ main(int argc, char *argv[])
   assert(NKEYS % nthread == 0);
   for (int i = 0; i < NKEYS; i++) {
     keys[i] = random();
+  }
+
+  // Initialize mutex locks for each bucket
+  for (int i = 0; i < NBUCKET; i++) {
+    pthread_mutex_init(&table_locks[i], NULL);
   }
 
   //
@@ -131,7 +139,7 @@ main(int argc, char *argv[])
   t1 = now();
 
   printf("%d puts, %.3f seconds, %.0f puts/second\n",
-         NKEYS, t1 - t0, NKEYS / (t1 - t0));
+        NKEYS, t1 - t0, NKEYS / (t1 - t0));
 
   //
   // now the gets
@@ -146,5 +154,14 @@ main(int argc, char *argv[])
   t1 = now();
 
   printf("%d gets, %.3f seconds, %.0f gets/second\n",
-         NKEYS*nthread, t1 - t0, (NKEYS*nthread) / (t1 - t0));
+        NKEYS*nthread, t1 - t0, (NKEYS*nthread) / (t1 - t0));
+
+  // Destroy mutex locks for each bucket
+  for (int i = 0; i < NBUCKET; i++) 
+  {
+    pthread_mutex_destroy(&table_locks[i]);
+  }
+
+  free(tha);
+  return 0;
 }
